@@ -44,6 +44,15 @@ serve(async (req) => {
   }
 
   try {
+    // Basic auth check — require an Authorization header
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     if (!GEMINI_API_KEY) {
       return new Response(
         JSON.stringify({ error: 'Gemini API key not configured on server' }),
