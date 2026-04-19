@@ -54,7 +54,7 @@ export default function SemesterDetailScreen() {
       if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      Alert.alert('Error', err.message ?? 'Something went wrong. Please try again.');
     }
   };
 

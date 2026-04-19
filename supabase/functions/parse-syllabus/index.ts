@@ -60,6 +60,14 @@ serve(async (req) => {
       );
     }
 
+    // Reject payloads over ~7.5MB (10MB base64)
+    if (typeof base64 === 'string' && base64.length > 10_000_000) {
+      return new Response(
+        JSON.stringify({ error: 'File too large. Maximum size is approximately 7.5 MB.' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     const body = {
       contents: [
         {
@@ -89,7 +97,7 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${response.status}`, details: errorText }),
+        JSON.stringify({ error: `AI processing failed (status ${response.status}). Please try again.` }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -111,7 +119,7 @@ serve(async (req) => {
       result = JSON.parse(cleaned);
     } catch {
       return new Response(
-        JSON.stringify({ error: 'Failed to parse Gemini response as JSON', raw: cleaned }),
+        JSON.stringify({ error: 'Failed to parse AI response. Please try again with a clearer document.' }),
         { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
@@ -152,7 +160,7 @@ serve(async (req) => {
     );
   } catch (err) {
     return new Response(
-      JSON.stringify({ error: 'Internal server error', message: String(err) }),
+      JSON.stringify({ error: 'An unexpected error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
