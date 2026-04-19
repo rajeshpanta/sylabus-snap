@@ -15,6 +15,7 @@ import { requestNotificationPermission } from '@/lib/notifications';
 import { COLORS } from '@/lib/constants';
 import { useAppStore } from '@/store/appStore';
 import { setQueryClient } from '@/lib/auth';
+import { configure as configureRevenueCat, checkProStatus, addCustomerInfoListener } from '@/lib/purchases';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -71,7 +72,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session) {
         saveTimezoneIfNeeded(session.user.id);
         requestNotificationPermission();
+        configureRevenueCat(session.user.id).then(() => {
+          checkProStatus().then((isPro) => useAppStore.getState().setIsPro(isPro));
+        });
       }
+    });
+
+    addCustomerInfoListener((info) => {
+      const isPro = !!info.entitlements.active['pro'];
+      useAppStore.getState().setIsPro(isPro);
     });
 
     return () => subscription.unsubscribe();
@@ -187,6 +196,7 @@ function RootLayoutNav() {
               <Stack.Screen name="settings/help" options={{ title: 'Help & FAQ' }} />
               <Stack.Screen name="settings/calendar" options={{ title: 'Calendar Sync' }} />
               <Stack.Screen name="settings/widgets" options={{ title: 'Widgets' }} />
+              <Stack.Screen name="paywall" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             </Stack>
           </AuthGate>
         </AuthProvider>

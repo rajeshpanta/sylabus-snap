@@ -17,6 +17,7 @@ export default function MeScreen() {
 
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
   const setSelectedSemester = useAppStore((s) => s.setSelectedSemester);
+  const isPro = useAppStore((s) => s.isPro);
   const { data: semesters = [] } = useSemesters();
   const { data: courses = [] } = useCourses(selectedSemesterId);
   const { data: stats } = useTaskStats(selectedSemesterId);
@@ -57,27 +58,37 @@ export default function MeScreen() {
           </View>
         </View>
 
-        {/* Premium upsell */}
-        <View style={styles.proCard}>
+        {/* Premium upsell / Pro active */}
+        <TouchableOpacity style={styles.proCard} activeOpacity={isPro ? 1 : 0.85} onPress={() => !isPro && router.push('/paywall' as any)}>
           <View style={styles.proGlow} />
           <View style={{ position: 'relative' }}>
             <View style={styles.proLabel}>
               <FontAwesome name="star" size={11} color={COLORS.brand100} />
               <Text style={styles.proLabelText}>SYLLABUSSNAP PRO</Text>
             </View>
-            <Text style={styles.proTitle}>Unlimited scans, smart plans, grade forecasts.</Text>
-            <View style={styles.proPrice}>
-              <Text style={styles.proPriceAmount}>$24.99</Text>
-              <Text style={styles.proPricePeriod}>/year · cancel any time</Text>
-            </View>
-            <TouchableOpacity style={styles.proButton} activeOpacity={0.8} onPress={() => Alert.alert('Coming Soon', 'In-app purchases will be available in a future update.')}>
-              <Text style={styles.proButtonText}>Try 7 days free</Text>
-            </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => Alert.alert('Coming Soon', 'Purchase restoration will be available in a future update.')}>
-              <Text style={styles.proAlt}>Or $3.99/month · restore purchase</Text>
-            </TouchableOpacity>
+            {isPro ? (
+              <>
+                <Text style={styles.proTitle}>You have full access to all Pro features.</Text>
+                <View style={styles.proActiveBadge}>
+                  <FontAwesome name="check-circle" size={14} color={COLORS.teal} />
+                  <Text style={styles.proActiveText}>Active</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.proTitle}>Unlimited scans, smart plans, grade forecasts.</Text>
+                <View style={styles.proPrice}>
+                  <Text style={styles.proPriceAmount}>$24.99</Text>
+                  <Text style={styles.proPricePeriod}>/year · cancel any time</Text>
+                </View>
+                <View style={styles.proButton}>
+                  <Text style={styles.proButtonText}>Try 7 days free</Text>
+                </View>
+                <Text style={styles.proAlt}>Or $3.99/month · restore purchase</Text>
+              </>
+            )}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Stats */}
         <View style={styles.statsGrid}>
@@ -164,6 +175,8 @@ const styles = StyleSheet.create({
   proButton: { backgroundColor: '#fff', borderRadius: 12, padding: 10, alignItems: 'center', marginTop: 12 },
   proButtonText: { fontSize: 14, fontWeight: '500', color: COLORS.ink },
   proAlt: { fontSize: 14, color: 'rgba(255,255,255,0.55)', textAlign: 'center', marginTop: 8 },
+  proActiveBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 14 },
+  proActiveText: { fontSize: 14, fontWeight: '600', color: COLORS.teal },
   // Stats
   statsGrid: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   statCard: { flex: 1, backgroundColor: COLORS.card, borderRadius: 18, padding: 12, alignItems: 'center', borderWidth: 0.5, borderColor: COLORS.line },

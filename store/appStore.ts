@@ -33,6 +33,10 @@ interface AppState {
   setSelectedSemester: (id: string | null) => void;
   themeMode: ThemeMode;
   setThemeMode: (mode: ThemeMode) => void;
+  isPro: boolean;
+  setIsPro: (value: boolean) => void;
+  subscriptionPlan: 'annual' | 'monthly' | null;
+  setSubscriptionPlan: (plan: 'annual' | 'monthly' | null) => void;
 }
 
 function deleteItem(key: string) {
@@ -55,6 +59,10 @@ export const useAppStore = create<AppState>((set) => ({
     set({ themeMode: mode });
     setItem(THEME_KEY, mode);
   },
+  isPro: false,
+  setIsPro: (value) => set({ isPro: value }),
+  subscriptionPlan: null,
+  setSubscriptionPlan: (plan) => set({ subscriptionPlan: plan }),
 }));
 
 const GRADE_CHECK_WINDOW = 60; // days after semester ends where student may still check grades
