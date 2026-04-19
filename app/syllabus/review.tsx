@@ -70,7 +70,13 @@ export default function SyllabusReviewScreen() {
       if (!session) throw new Error('Not authenticated');
 
       // Create tasks for each accepted item
+      let savedCount = 0;
       for (const item of accepted) {
+        // Validate due_time format before saving
+        const dueTime = item.due_time && /^\d{2}:\d{2}$/.test(item.due_time)
+          ? `${item.due_time}:00`
+          : null;
+
         const { data: task, error } = await supabase
           .from('tasks')
           .insert({
@@ -80,7 +86,7 @@ export default function SyllabusReviewScreen() {
             description: item.description,
             type: item.type,
             due_date: item.due_date,
-            due_time: item.due_time ? `${item.due_time}:00` : null,
+            due_time: dueTime,
             weight: item.weight,
             source: 'gemini_parsed',
             parse_run_id: params.parseRunId,
@@ -92,6 +98,8 @@ export default function SyllabusReviewScreen() {
           console.warn('Failed to create task:', error.message);
           continue;
         }
+
+        savedCount++;
 
         // Schedule notifications
         if (task) {
@@ -106,7 +114,7 @@ export default function SyllabusReviewScreen() {
         await supabase
           .from('parse_runs')
           .update({
-            items_accepted: accepted.length,
+            items_accepted: savedCount,
             items_rejected: items.length - accepted.length,
           })
           .eq('id', params.parseRunId);
@@ -119,7 +127,7 @@ export default function SyllabusReviewScreen() {
 
       Alert.alert(
         'Saved!',
-        `${accepted.length} tasks added to your course.`,
+        `${savedCount} task${savedCount !== 1 ? 's' : ''} added to your course.${savedCount < accepted.length ? ` (${accepted.length - savedCount} failed)` : ''}`,
         [{ text: 'View Course', onPress: () => router.replace(`/course/${params.courseId}` as any) },
          { text: 'Go Home', onPress: () => router.replace('/(tabs)' as any) }],
       );
