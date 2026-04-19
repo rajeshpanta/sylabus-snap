@@ -350,13 +350,13 @@ export function useUpdateTask() {
         courseName = course?.name || 'Course';
       }
 
-      // Re-sync to calendar if enabled
-      if (isSyncEnabled()) {
+      // Re-sync to calendar if enabled (only for incomplete tasks)
+      if (isSyncEnabled() && !result.is_completed) {
         syncTaskToCalendar(result as Task, courseName).catch(() => {});
       }
 
-      // Reschedule notifications if due_date or due_time changed
-      if (data.due_date !== undefined || data.due_time !== undefined) {
+      // Reschedule notifications if due_date or due_time changed (only for incomplete tasks)
+      if (!result.is_completed && (data.due_date !== undefined || data.due_time !== undefined)) {
         await cancelTaskReminders(id).catch(() => {});
         scheduleTaskReminders(
           id, result.title, courseName, result.due_date, result.due_time, result.user_id,
@@ -420,12 +420,19 @@ export function useToggleTaskComplete() {
         .single();
       if (error) throw error;
 
-      // Cancel reminders when completing, reschedule when un-completing
+      // Cancel reminders and remove from calendar when completing,
+      // reschedule and re-sync when un-completing
+      const courseName = (data as any).courses?.name || 'Course';
       if (is_completed) {
         cancelTaskReminders(id).catch(() => {});
+        if (isSyncEnabled()) {
+          removeTaskFromCalendar(data.title, courseName, data.due_date).catch(() => {});
+        }
       } else {
-        const courseName = (data as any).courses?.name || 'Course';
         scheduleTaskReminders(id, data.title, courseName, data.due_date, data.due_time, data.user_id).catch(() => {});
+        if (isSyncEnabled()) {
+          syncTaskToCalendar(data as Task, courseName).catch(() => {});
+        }
       }
 
       return data as Task;
