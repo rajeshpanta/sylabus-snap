@@ -62,14 +62,15 @@ export default function CalendarScreen() {
   const toggleComplete = useToggleTaskComplete();
 
   useEffect(() => {
-    if (!selectedSemesterId && semesters.length > 0) setSelectedSemester(findCurrentSemester(semesters));
+    if (semesters.length === 0) return;
+    if (!selectedSemesterId || !semesters.some((s) => s.id === selectedSemesterId)) setSelectedSemester(findCurrentSemester(semesters));
   }, [semesters, selectedSemesterId]);
 
   const monthStart = format(startOfMonth(viewDate), 'yyyy-MM-dd');
   const monthEnd = format(endOfMonth(viewDate), 'yyyy-MM-dd');
 
   const { data: monthTasks = [] } = useTasks(
-    selectedSemesterId ? { semesterId: selectedSemesterId, dueDateFrom: monthStart, dueDateTo: monthEnd } : undefined
+    selectedSemesterId ? { semesterId: selectedSemesterId, dueDateFrom: monthStart, dueDateTo: monthEnd } : { semesterId: null }
   );
 
   const tasksByDate = new Map<string, TaskWithCourse[]>();
@@ -193,6 +194,49 @@ export default function CalendarScreen() {
 
             {/* Selected day agenda */}
             <Text style={styles.agendaTitle}>{selectedLabel} · {selectedItemCount} items</Text>
+            {selectedTasks.length > 0 ? (
+              <View style={styles.agendaCard}>
+                {selectedTasks.map((task, i) => {
+                  const isLast = i === selectedTasks.length - 1;
+                  return (
+                    <TouchableOpacity
+                      key={task.id}
+                      style={[styles.agendaRow, !isLast && styles.agendaRowBorder]}
+                      onPress={() => router.push(`/task/${task.id}` as any)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.agendaTimeCol}>
+                        {task.due_time ? (
+                          <>
+                            <Text style={[styles.agendaTime, !task.is_completed && { color: COLORS.coral }]}>{task.due_time.slice(0, 5)}</Text>
+                            <Text style={[styles.agendaDueLabel, !task.is_completed && { color: COLORS.coral }]}>DUE</Text>
+                          </>
+                        ) : (
+                          <Text style={styles.agendaTime}>--:--</Text>
+                        )}
+                      </View>
+                      <View style={[styles.agendaBar, { backgroundColor: task.courses.color }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.agendaTaskTitle, task.is_completed && styles.agendaTaskDone]}>{task.title}</Text>
+                        <Text style={styles.agendaTaskCourse}>{task.courses.name}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={() => toggleComplete.mutate({ id: task.id, is_completed: !task.is_completed })}
+                        hitSlop={8}
+                      >
+                        <View style={[styles.cbx, task.is_completed && { backgroundColor: COLORS.teal, borderColor: COLORS.teal }]}>
+                          {task.is_completed && <FontAwesome name="check" size={9} color="#fff" />}
+                        </View>
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : (
+              <View style={styles.agendaEmpty}>
+                <Text style={styles.agendaEmptyText}>No tasks on this date</Text>
+              </View>
+            )}
           </>
         ) : (
           <>
@@ -245,50 +289,6 @@ export default function CalendarScreen() {
               </View>
             )}
           </>
-        )}
-        {selectedTasks.length > 0 ? (
-          <View style={styles.agendaCard}>
-            {selectedTasks.map((task, i) => {
-              const isLast = i === selectedTasks.length - 1;
-              const isDue = !!task.due_time;
-              return (
-                <TouchableOpacity
-                  key={task.id}
-                  style={[styles.agendaRow, !isLast && styles.agendaRowBorder]}
-                  onPress={() => router.push(`/task/${task.id}` as any)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.agendaTimeCol}>
-                    {task.due_time ? (
-                      <>
-                        <Text style={[styles.agendaTime, !task.is_completed && { color: COLORS.coral }]}>{task.due_time.slice(0, 5)}</Text>
-                        <Text style={[styles.agendaDueLabel, !task.is_completed && { color: COLORS.coral }]}>DUE</Text>
-                      </>
-                    ) : (
-                      <Text style={styles.agendaTime}>--:--</Text>
-                    )}
-                  </View>
-                  <View style={[styles.agendaBar, { backgroundColor: task.courses.color }]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.agendaTaskTitle, task.is_completed && styles.agendaTaskDone]}>{task.title}</Text>
-                    <Text style={styles.agendaTaskCourse}>{task.courses.name}</Text>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => toggleComplete.mutate({ id: task.id, is_completed: !task.is_completed })}
-                    hitSlop={8}
-                  >
-                    <View style={[styles.cbx, task.is_completed && { backgroundColor: COLORS.teal, borderColor: COLORS.teal }]}>
-                      {task.is_completed && <FontAwesome name="check" size={9} color="#fff" />}
-                    </View>
-                  </TouchableOpacity>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        ) : (
-          <View style={styles.agendaEmpty}>
-            <Text style={styles.agendaEmptyText}>No tasks on this date</Text>
-          </View>
         )}
 
         <View style={{ height: 40 }} />

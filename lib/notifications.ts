@@ -25,8 +25,8 @@ function getDueLabel(daysUntilDue: number): string {
   if (daysUntilDue === 0) return 'due today';
   if (daysUntilDue === 1) return 'due tomorrow';
   if (daysUntilDue > 1) return `due in ${daysUntilDue} days`;
-  if (daysUntilDue === -1) return 'was due yesterday';
-  return `is ${Math.abs(daysUntilDue)} days overdue`;
+  if (daysUntilDue === -1) return 'overdue by 1 day';
+  return `overdue by ${Math.abs(daysUntilDue)} days`;
 }
 
 export async function scheduleTaskReminders(

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
 import { useSession } from '@/app/_layout';
 import { useAppStore, findCurrentSemester } from '@/store/appStore';
 import { useSemesters, useCourses, useTaskStats } from '@/lib/queries';
@@ -21,10 +22,28 @@ export default function MeScreen() {
   const { data: stats } = useTaskStats(selectedSemesterId);
 
   useEffect(() => {
-    if (!selectedSemesterId && semesters.length > 0) setSelectedSemester(findCurrentSemester(semesters));
+    if (semesters.length === 0) return;
+    if (!selectedSemesterId || !semesters.some((s) => s.id === selectedSemesterId)) setSelectedSemester(findCurrentSemester(semesters));
   }, [semesters, selectedSemesterId]);
 
   const activeSemester = semesters.find((s) => s.id === selectedSemesterId);
+  const themeMode = useAppStore((s) => s.themeMode);
+  const themeModeLabel = themeMode === 'system' ? 'System' : themeMode === 'light' ? 'Light' : 'Dark';
+  const router = useRouter();
+
+  const handleRate = async () => {
+    try {
+      const StoreReview = await import('expo-store-review');
+      const available = await StoreReview.isAvailableAsync();
+      if (available) {
+        await StoreReview.requestReview();
+      } else {
+        Alert.alert('Rate Us', 'Rating will be available once the app is on the App Store.');
+      }
+    } catch {
+      Alert.alert('Rate Us', 'Rating will be available once the app is on the App Store.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -51,10 +70,12 @@ export default function MeScreen() {
               <Text style={styles.proPriceAmount}>$24.99</Text>
               <Text style={styles.proPricePeriod}>/year · cancel any time</Text>
             </View>
-            <TouchableOpacity style={styles.proButton} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.proButton} activeOpacity={0.8} onPress={() => Alert.alert('Coming Soon', 'In-app purchases will be available in a future update.')}>
               <Text style={styles.proButtonText}>Try 7 days free</Text>
             </TouchableOpacity>
-            <Text style={styles.proAlt}>Or $3.99/month · restore purchase</Text>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => Alert.alert('Coming Soon', 'Purchase restoration will be available in a future update.')}>
+              <Text style={styles.proAlt}>Or $3.99/month · restore purchase</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -79,17 +100,17 @@ export default function MeScreen() {
         {/* Preferences */}
         <Text style={styles.sectionTitle}>Preferences</Text>
         <View style={styles.settingsCard}>
-          <SettingsRow icon="bell" label="Notifications" value="1 day, 3 days" onPress={() => Alert.alert('Notifications', 'Reminders are sent 1 day and 3 days before due dates. Customize in a future update.')} />
-          <SettingsRow icon="calendar" label="Calendar sync" pro />
-          <SettingsRow icon="sun-o" label="Appearance" value="System" onPress={() => Alert.alert('Appearance', 'Theme follows your system setting. Dark mode customization coming soon.')} />
-          <SettingsRow icon="th-large" label="Widgets" pro last />
+          <SettingsRow icon="bell" label="Notifications" value="1 day, 3 days" onPress={() => router.push('/settings/notifications')} />
+          <SettingsRow icon="calendar" label="Calendar sync" onPress={() => router.push('/settings/calendar')} />
+          <SettingsRow icon="sun-o" label="Appearance" value={themeModeLabel} onPress={() => router.push('/settings/appearance')} />
+          <SettingsRow icon="th-large" label="Widgets" onPress={() => router.push('/settings/widgets')} last />
         </View>
 
         {/* Support */}
         <Text style={styles.sectionTitle}>Support</Text>
         <View style={styles.settingsCard}>
-          <SettingsRow icon="question-circle-o" label="Help & FAQ" onPress={() => Alert.alert('Help', 'For support, email help@syllabussnap.com')} />
-          <SettingsRow icon="star-o" label="Rate SyllabusSnap" last onPress={() => Alert.alert('Rate Us', 'Rating will be available once the app is on the App Store.')} />
+          <SettingsRow icon="question-circle-o" label="Help & FAQ" onPress={() => router.push('/settings/help')} />
+          <SettingsRow icon="star-o" label="Rate SyllabusSnap" last onPress={handleRate} />
         </View>
 
         {/* Sign out */}

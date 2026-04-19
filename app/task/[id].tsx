@@ -151,7 +151,7 @@ export default function TaskDetailScreen() {
   const handleDelete = () => {
     Alert.alert('Delete Task', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await deleteTask.mutateAsync(task.id); router.back(); } },
+      { text: 'Delete', style: 'destructive', onPress: async () => { try { await deleteTask.mutateAsync(task.id); router.back(); } catch (err: any) { Alert.alert('Delete Failed', err.message ?? 'Something went wrong. Please try again.'); } } },
     ]);
   };
 

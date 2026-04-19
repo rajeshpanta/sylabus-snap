@@ -1,15 +1,60 @@
 import { create } from 'zustand';
 import { differenceInDays } from 'date-fns';
+import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import type { Semester } from '@/types/database';
+
+export type ThemeMode = 'system' | 'light' | 'dark';
+
+const THEME_KEY = 'syllabussnap_theme';
+const SEMESTER_KEY = 'syllabussnap_semester';
+
+function getItem(key: string): string | null {
+  if (Platform.OS === 'web') return null;
+  try { return SecureStore.getItem(key); } catch { return null; }
+}
+
+function setItem(key: string, value: string) {
+  if (Platform.OS === 'web') return;
+  try { SecureStore.setItem(key, value); } catch {}
+}
+
+// Load initial values synchronously so there's no flash
+const initialTheme = (() => {
+  const stored = getItem(THEME_KEY);
+  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored;
+  return 'system' as ThemeMode;
+})();
+
+const initialSemester = getItem(SEMESTER_KEY);
 
 interface AppState {
   selectedSemesterId: string | null;
   setSelectedSemester: (id: string | null) => void;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
+}
+
+function deleteItem(key: string) {
+  if (Platform.OS === 'web') return;
+  SecureStore.deleteItemAsync(key).catch(() => {});
 }
 
 export const useAppStore = create<AppState>((set) => ({
-  selectedSemesterId: null,
-  setSelectedSemester: (id) => set({ selectedSemesterId: id }),
+  selectedSemesterId: initialSemester,
+  setSelectedSemester: (id) => {
+    set({ selectedSemesterId: id });
+    if (id) {
+      setItem(SEMESTER_KEY, id);
+    } else {
+      deleteItem(SEMESTER_KEY);
+    }
+  },
+  themeMode: initialTheme,
+  setThemeMode: (mode) => {
+    set({ themeMode: mode });
+    setItem(THEME_KEY, mode);
+  },
 }));
 
 const GRADE_CHECK_WINDOW = 60; // days after semester ends where student may still check grades

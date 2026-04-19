@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { extractFromFile, type SyllabusExtraction, type ExtractedItem } from '@/lib/gemini';
 import * as FileSystem from 'expo-file-system/legacy';
-import { COURSE_COLORS, COURSE_ICONS } from '@/lib/constants';
+import { COURSE_COLORS, COURSE_ICONS, DEFAULT_GRADE_SCALE } from '@/lib/constants';
 
 export interface ProcessResult {
   uploadId: string;
@@ -47,10 +47,27 @@ export async function processSyllabus(
 
   // 3b. Apply extracted grade scale if found (only for new courses or if existing has default)
   if (extraction.grade_scale && extraction.grade_scale.length > 0) {
-    await supabase
-      .from('courses')
-      .update({ grade_scale: extraction.grade_scale })
-      .eq('id', courseId);
+    let shouldApply = !isExisting;
+
+    if (isExisting) {
+      const { data: existingCourse } = await supabase
+        .from('courses')
+        .select('grade_scale')
+        .eq('id', courseId)
+        .single();
+      const scale = existingCourse?.grade_scale as { letter: string; min: number }[] | null;
+      shouldApply = !scale || (
+        scale.length === DEFAULT_GRADE_SCALE.length &&
+        DEFAULT_GRADE_SCALE.every((d, i) => scale[i]?.letter === d.letter && scale[i]?.min === d.min)
+      );
+    }
+
+    if (shouldApply) {
+      await supabase
+        .from('courses')
+        .update({ grade_scale: extraction.grade_scale })
+        .eq('id', courseId);
+    }
   }
 
   // 4. Create upload record
@@ -170,12 +187,13 @@ async function findOrCreateCourse(
     : courseName;
 
   // Check if a course with similar name exists in this semester
+  const searchTerm = (courseCode || courseName).replace(/[%_]/g, '\\$&');
   const { data: existing } = await supabase
     .from('courses')
     .select('id, name')
     .eq('user_id', userId)
     .eq('semester_id', semesterId)
-    .ilike('name', `%${courseCode || courseName}%`)
+    .ilike('name', `%${searchTerm}%`)
     .limit(1);
 
   if (existing && existing.length > 0) {

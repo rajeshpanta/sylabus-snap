@@ -12,7 +12,12 @@ export async function signUp(email: string, password: string) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-  useAppStore.getState().setSelectedSemester(null);
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } finally {
+    // Always clear local state, even if the API call fails —
+    // a stuck session is worse than a stale sign-out
+    useAppStore.getState().setSelectedSemester(null);
+  }
 }

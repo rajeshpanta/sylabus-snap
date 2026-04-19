@@ -64,9 +64,13 @@ export default function SemesterDetailScreen() {
       {
         text: 'Delete', style: 'destructive',
         onPress: async () => {
-          await deleteSemester.mutateAsync(semester.id);
-          setSelectedSemester(null);
-          router.back();
+          try {
+            await deleteSemester.mutateAsync(semester.id);
+            setSelectedSemester(null);
+            router.back();
+          } catch (err: any) {
+            Alert.alert('Delete Failed', err.message ?? 'Something went wrong. Please try again.');
+          }
         },
       },
     ]);

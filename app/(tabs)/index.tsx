@@ -43,7 +43,7 @@ export default function TodayScreen() {
   const { data: overdueTasks = [] } = useTasks(
     selectedSemesterId
       ? { semesterId: selectedSemesterId, dueDateTo: yesterdayStr, isCompleted: false }
-      : undefined
+      : { semesterId: null }
   );
 
   // Week data
@@ -52,11 +52,12 @@ export default function TodayScreen() {
   const { data: weekTasks = [] } = useTasks(
     selectedSemesterId
       ? { semesterId: selectedSemesterId, dueDateFrom: format(weekStart, 'yyyy-MM-dd'), dueDateTo: format(weekEnd, 'yyyy-MM-dd') }
-      : undefined
+      : { semesterId: null }
   );
 
   useEffect(() => {
-    if (!selectedSemesterId && semesters.length > 0) {
+    if (semesters.length === 0) return;
+    if (!selectedSemesterId || !semesters.some((s) => s.id === selectedSemesterId)) {
       setSelectedSemester(findCurrentSemester(semesters));
     }
   }, [semesters, selectedSemesterId]);
@@ -68,7 +69,7 @@ export default function TodayScreen() {
 
   // Next up: most urgent incomplete task
   const nextUp = dueSoonTasks.length > 0 ? dueSoonTasks[0] : null;
-  const nextUpDays = nextUp ? differenceInDays(new Date(nextUp.due_date + 'T00:00:00'), today) : 0;
+  const nextUpDays = nextUp ? Math.max(0, differenceInDays(new Date(nextUp.due_date + 'T00:00:00'), today)) : 0;
 
   // Weekly stats
   const weekExams = weekTasks.filter((t) => t.type === 'exam').length;

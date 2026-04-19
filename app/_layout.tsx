@@ -14,6 +14,7 @@ import type { Session } from '@supabase/supabase-js';
 import * as Localization from 'expo-localization';
 import { requestNotificationPermission } from '@/lib/notifications';
 import { COLORS } from '@/lib/constants';
+import { useAppStore } from '@/store/appStore';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -56,6 +57,10 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         saveTimezoneIfNeeded(session.user.id);
         requestNotificationPermission();
       }
+    }).catch(() => {
+      // Network failure or Supabase unreachable — let user through
+      // so they see the sign-in screen instead of stuck splash
+      setLoading(false);
     });
 
     const {
@@ -161,11 +166,14 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const systemScheme = useColorScheme();
+  const themeMode = useAppStore((s) => s.themeMode);
+
+  const resolvedScheme = themeMode === 'system' ? systemScheme : themeMode;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <ThemeProvider value={DefaultTheme}>
         <AuthProvider>
           <AuthGate>
             <Stack>
@@ -179,6 +187,11 @@ function RootLayoutNav() {
               <Stack.Screen name="task/[id]" options={{ title: 'Task' }} />
               <Stack.Screen name="syllabus/upload" options={{ presentation: 'modal', title: 'Upload Syllabus' }} />
               <Stack.Screen name="syllabus/review" options={{ title: 'Review Items' }} />
+              <Stack.Screen name="settings/notifications" options={{ title: 'Notifications' }} />
+              <Stack.Screen name="settings/appearance" options={{ title: 'Appearance' }} />
+              <Stack.Screen name="settings/help" options={{ title: 'Help & FAQ' }} />
+              <Stack.Screen name="settings/calendar" options={{ title: 'Calendar Sync' }} />
+              <Stack.Screen name="settings/widgets" options={{ title: 'Widgets' }} />
             </Stack>
           </AuthGate>
         </AuthProvider>

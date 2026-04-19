@@ -86,7 +86,7 @@ export default function CourseDetailScreen() {
   const handleDelete = () => {
     Alert.alert('Delete Course', 'This will also delete all tasks for this course.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await deleteCourse.mutateAsync(course.id); router.back(); } },
+      { text: 'Delete', style: 'destructive', onPress: async () => { try { await deleteCourse.mutateAsync(course.id); router.back(); } catch (err: any) { Alert.alert('Delete Failed', err.message ?? 'Something went wrong. Please try again.'); } } },
     ]);
   };
 

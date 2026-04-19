@@ -26,7 +26,27 @@
       "expo-router",
       "expo-secure-store",
       "expo-localization",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "SyllabusSnap needs calendar access to sync your task due dates."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#6B46C1"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SyllabusSnap needs photo access to upload syllabus images.",
+          "cameraPermission": "SyllabusSnap needs camera access to scan syllabi."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

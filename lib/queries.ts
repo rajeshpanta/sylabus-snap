@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import type { Semester, Course, Task, NewSemester, NewCourse, NewTask } from '@/types/database';
 import { format, addDays } from 'date-fns';
 import { scheduleTaskReminders, cancelTaskReminders } from '@/lib/notifications';
+import { syncTaskToCalendar, removeTaskFromCalendar, isSyncEnabled } from '@/lib/calendarSync';
 
 // ── Query Keys ──────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ export function useTasks(filters?: TaskFilters) {
       if (error) throw error;
       return data as TaskWithCourse[];
     },
-    enabled: filters?.semesterId ? true : !filters?.semesterId,
+    enabled: !filters || !('semesterId' in filters) || !!filters.semesterId,
   });
 }
 
@@ -134,7 +135,7 @@ export function useTodayTasks(semesterId: string | null) {
   return useTasks(
     semesterId
       ? { semesterId, dueDateFrom: today, dueDateTo: today, isCompleted: false }
-      : undefined
+      : { semesterId: null }
   );
 }
 
@@ -144,7 +145,7 @@ export function useDueSoonTasks(semesterId: string | null) {
   return useTasks(
     semesterId
       ? { semesterId, dueDateFrom: today, dueDateTo: soon, isCompleted: false }
-      : undefined
+      : { semesterId: null }
   );
 }
 
@@ -314,6 +315,11 @@ export function useCreateTask() {
         result.user_id,
       ).catch(() => {}); // Non-critical
 
+      // Sync to calendar if enabled
+      if (isSyncEnabled()) {
+        syncTaskToCalendar(result as Task, _courseName || 'Course').catch(() => {});
+      }
+
       return result as Task;
     },
     onSuccess: () => {
@@ -326,7 +332,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...data }: { id: string } & Partial<NewTask>) => {
+    mutationFn: async ({ id, _courseName, ...data }: { id: string; _courseName?: string } & Partial<NewTask>) => {
       const { data: result, error } = await supabase
         .from('tasks')
         .update(data)
@@ -334,6 +340,31 @@ export function useUpdateTask() {
         .select()
         .single();
       if (error) throw error;
+
+      // Resolve course name once for calendar and notifications
+      let courseName = _courseName || '';
+      if (!courseName) {
+        const { data: course } = await supabase
+          .from('courses')
+          .select('name')
+          .eq('id', result.course_id)
+          .single();
+        courseName = course?.name || 'Course';
+      }
+
+      // Re-sync to calendar if enabled
+      if (isSyncEnabled()) {
+        syncTaskToCalendar(result as Task, courseName).catch(() => {});
+      }
+
+      // Reschedule notifications if due_date or due_time changed
+      if (data.due_date !== undefined || data.due_time !== undefined) {
+        await cancelTaskReminders(id).catch(() => {});
+        scheduleTaskReminders(
+          id, result.title, courseName, result.due_date, result.due_time, result.user_id,
+        ).catch(() => {});
+      }
+
       return result as Task;
     },
     onSuccess: (result) => {
@@ -349,6 +380,20 @@ export function useDeleteTask() {
   return useMutation({
     mutationFn: async (id: string) => {
       cancelTaskReminders(id).catch(() => {});
+
+      // Fetch task info before deleting so we can remove the calendar event
+      if (isSyncEnabled()) {
+        const { data: task } = await supabase
+          .from('tasks')
+          .select('title, due_date, courses(name)')
+          .eq('id', id)
+          .single();
+        if (task) {
+          const courseName = (task as any).courses?.name || 'Course';
+          removeTaskFromCalendar(task.title, courseName, task.due_date).catch(() => {});
+        }
+      }
+
       const { error } = await supabase.from('tasks').delete().eq('id', id);
       if (error) throw error;
     },

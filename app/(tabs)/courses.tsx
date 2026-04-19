@@ -26,10 +26,11 @@ export default function CoursesScreen() {
   const { data: semesters = [] } = useSemesters();
   const deleteSemester = useDeleteSemester();
   const { data: courses = [] } = useCourses(selectedSemesterId);
-  const { data: tasks = [] } = useTasks(selectedSemesterId ? { semesterId: selectedSemesterId } : undefined);
+  const { data: tasks = [] } = useTasks(selectedSemesterId ? { semesterId: selectedSemesterId } : { semesterId: null });
 
   useEffect(() => {
-    if (!selectedSemesterId && semesters.length > 0) setSelectedSemester(findCurrentSemester(semesters));
+    if (semesters.length === 0) return;
+    if (!selectedSemesterId || !semesters.some((s) => s.id === selectedSemesterId)) setSelectedSemester(findCurrentSemester(semesters));
   }, [semesters, selectedSemesterId]);
 
   const activeSemester = semesters.find((s) => s.id === selectedSemesterId);
@@ -108,8 +109,12 @@ export default function CoursesScreen() {
                           text: 'Delete',
                           style: 'destructive',
                           onPress: async () => {
-                            await deleteSemester.mutateAsync(activeSemester.id);
-                            setSelectedSemester(null);
+                            try {
+                              await deleteSemester.mutateAsync(activeSemester.id);
+                              setSelectedSemester(null);
+                            } catch (err: any) {
+                              Alert.alert('Delete Failed', err.message ?? 'Something went wrong. Please try again.');
+                            }
                           },
                         },
                       ],

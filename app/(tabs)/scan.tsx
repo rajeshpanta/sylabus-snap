@@ -18,7 +18,8 @@ export default function ScanScreen() {
   const { data: semesters = [] } = useSemesters();
 
   useEffect(() => {
-    if (!selectedSemesterId && semesters.length > 0) setSelectedSemester(findCurrentSemester(semesters));
+    if (semesters.length === 0) return;
+    if (!selectedSemesterId || !semesters.some((s) => s.id === selectedSemesterId)) setSelectedSemester(findCurrentSemester(semesters));
   }, [semesters, selectedSemesterId]);
 
   const navigateToUpload = (fileUri: string, fileName: string, mimeType: string) => {
