@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useEffect, useState } from 'react';
 import { COLORS } from '@/lib/constants';
@@ -17,6 +17,8 @@ export default function CalendarSyncSettings() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
+  const isPro = useAppStore((s) => s.isPro);
+  const router = useRouter();
 
   useEffect(() => {
     isSynced().then((v) => {
@@ -52,6 +54,18 @@ export default function CalendarSyncSettings() {
       );
     } else {
       // Turn on
+      if (!isPro) {
+        Alert.alert(
+          'Pro Feature',
+          'Calendar sync is available with SyllabusSnap Pro.',
+          [
+            { text: 'Upgrade', onPress: () => router.push('/paywall' as any) },
+            { text: 'Cancel', style: 'cancel' },
+          ],
+        );
+        return;
+      }
+
       if (Platform.OS === 'web') {
         Alert.alert('Not Available', 'Calendar sync is only available on iOS and Android.');
         return;

@@ -9,13 +9,31 @@ import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 import { COLORS } from '@/lib/constants';
 import { useAppStore, findCurrentSemester } from '@/store/appStore';
-import { useSemesters } from '@/lib/queries';
+import { useSemesters, useScanCount, FREE_SCAN_LIMIT } from '@/lib/queries';
 
 export default function ScanScreen() {
   const router = useRouter();
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
   const setSelectedSemester = useAppStore((s) => s.setSelectedSemester);
+  const isPro = useAppStore((s) => s.isPro);
   const { data: semesters = [] } = useSemesters();
+  const { data: scanCount = 0 } = useScanCount();
+
+  const checkScanLimit = (): boolean => {
+    if (isPro) return true;
+    if (scanCount >= FREE_SCAN_LIMIT) {
+      Alert.alert(
+        'Scan Limit Reached',
+        `You've used ${scanCount} of ${FREE_SCAN_LIMIT} free scans this month. Upgrade to Pro for unlimited scanning.`,
+        [
+          { text: 'Upgrade', onPress: () => router.push('/paywall' as any) },
+          { text: 'Cancel', style: 'cancel' },
+        ],
+      );
+      return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     if (semesters.length === 0) return;
@@ -30,6 +48,7 @@ export default function ScanScreen() {
   };
 
   const handleTakePhoto = async () => {
+    if (!checkScanLimit()) return;
     if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -54,6 +73,7 @@ export default function ScanScreen() {
   };
 
   const handleUploadPDF = async () => {
+    if (!checkScanLimit()) return;
     if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const result = await DocumentPicker.getDocumentAsync({
@@ -72,6 +92,7 @@ export default function ScanScreen() {
   };
 
   const handleChooseFromPhotos = async () => {
+    if (!checkScanLimit()) return;
     if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -98,6 +119,7 @@ export default function ScanScreen() {
   };
 
   const handlePickFromFiles = async () => {
+    if (!checkScanLimit()) return;
     if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     const result = await DocumentPicker.getDocumentAsync({

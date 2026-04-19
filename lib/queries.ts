@@ -165,6 +165,25 @@ export function useTaskStats(semesterId: string | null) {
   });
 }
 
+export const FREE_SCAN_LIMIT = 3;
+
+export function useScanCount() {
+  return useQuery({
+    queryKey: ['scanCount'],
+    queryFn: async () => {
+      const userId = await getUserId();
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { count, error } = await supabase
+        .from('syllabus_uploads')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', thirtyDaysAgo);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+}
+
 // ── Mutation Hooks ──────────────────────────────────────────
 
 async function getUserId() {
