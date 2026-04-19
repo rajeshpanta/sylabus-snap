@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -23,7 +23,7 @@ export default function CoursesScreen() {
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
   const setSelectedSemester = useAppStore((s) => s.setSelectedSemester);
 
-  const { data: semesters = [] } = useSemesters();
+  const { data: semesters = [], isLoading: semestersLoading } = useSemesters();
   const deleteSemester = useDeleteSemester();
   const { data: courses = [] } = useCourses(selectedSemesterId);
   const { data: tasks = [] } = useTasks(selectedSemesterId ? { semesterId: selectedSemesterId } : { semesterId: null });
@@ -79,6 +79,16 @@ export default function CoursesScreen() {
     if (days === 1) return { text: 'tomorrow', urgent: true };
     if (days <= 3) return { text: `${days} days`, urgent: true };
     return { text: `in ${days} days`, urgent: false };
+  }
+
+  if (semestersLoading && semesters.length === 0) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.brand} />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Platform,
-  RefreshControl, TouchableOpacity, Alert,
+  RefreshControl, TouchableOpacity, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -29,7 +29,7 @@ export default function TodayScreen() {
 
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
   const setSelectedSemester = useAppStore((s) => s.setSelectedSemester);
-  const { data: semesters = [] } = useSemesters();
+  const { data: semesters = [], isLoading: semestersLoading } = useSemesters();
   const { data: courses = [] } = useCourses(selectedSemesterId);
   const { data: todayTasks = [] } = useTodayTasks(selectedSemesterId);
   const { data: dueSoonTasks = [] } = useDueSoonTasks(selectedSemesterId);
@@ -82,6 +82,17 @@ export default function TodayScreen() {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const todayDayIndex = (today.getDay() + 6) % 7; // Mon=0
 
+
+  // Show loading spinner on initial data fetch (not on pull-to-refresh)
+  if (semestersLoading && semesters.length === 0) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.brand} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
