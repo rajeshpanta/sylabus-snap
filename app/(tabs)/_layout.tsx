@@ -1,59 +1,103 @@
 import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Tabs } from 'expo-router';
+import { Platform, View, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
+import { COLORS } from '@/lib/constants';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+function TabIcon({ name, color, focused }: { name: any; color: string; focused: boolean }) {
+  return (
+    <View style={[ts.iconWrap, focused && ts.iconActive]}>
+      <FontAwesome name={name} size={18} color={color} />
+    </View>
+  );
+}
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
-  color: string;
-}) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+function ScanFab() {
+  return (
+    <View style={ts.fab}>
+      <FontAwesome name="camera" size={18} color="#fff" />
+    </View>
+  );
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const isWeb = Platform.OS === 'web';
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
+        tabBarActiveTintColor: COLORS.brand,
+        tabBarInactiveTintColor: COLORS.ink3,
+        headerShown: false,
+        tabBarBackground: () =>
+          !isWeb ? (
+            <BlurView intensity={80} tint="light" style={StyleSheet.absoluteFill} pointerEvents="none" />
+          ) : (
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: COLORS.paper }]} pointerEvents="none" />
+          ),
+        tabBarStyle: {
+          position: isWeb ? undefined : ('absolute' as const),
+          backgroundColor: isWeb ? COLORS.paper : `rgba(250,249,245,0.92)`,
+          borderTopWidth: 0.5,
+          borderTopColor: COLORS.line,
+          paddingBottom: isWeb ? 8 : insets.bottom,
+          paddingTop: 8,
+          elevation: 0,
+        },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '500', marginTop: 2 },
+      }}
+      screenListeners={{
+        tabPress: () => {
+          if (Platform.OS === 'ios') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'Today',
+          tabBarIcon: ({ color, focused }) => <TabIcon name="sun-o" color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="courses"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Courses',
+          tabBarIcon: ({ color, focused }) => <TabIcon name="book" color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: 'Scan',
+          tabBarIcon: () => <ScanFab />,
+          tabBarLabelStyle: { fontSize: 10, fontWeight: '500', marginTop: 6 },
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: 'Calendar',
+          tabBarIcon: ({ color, focused }) => <TabIcon name="calendar" color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="me"
+        options={{
+          title: 'Me',
+          tabBarIcon: ({ color, focused }) => <TabIcon name="user" color={color} focused={focused} />,
         }}
       />
     </Tabs>
   );
 }
+
+const ts = StyleSheet.create({
+  iconWrap: { width: 36, height: 28, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  iconActive: { backgroundColor: COLORS.brand50 },
+  fab: { width: 44, height: 44, borderRadius: 14, backgroundColor: COLORS.brand, justifyContent: 'center', alignItems: 'center', marginTop: -6, marginBottom: 2 },
+});

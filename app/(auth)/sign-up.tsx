@@ -1,0 +1,478 @@
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  ActivityIndicator,
+  ScrollView,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Link, useRouter } from 'expo-router';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { signUp } from '@/lib/auth';
+
+export default function SignUpScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [signedUpEmail, setSignedUpEmail] = useState('');
+  const router = useRouter();
+
+  const handleSignUp = async () => {
+    setError('');
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!password) {
+      setError('Please enter a password.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await signUp(email.trim(), password);
+      setSignedUpEmail(email.trim());
+    } catch (err: any) {
+      const msg = err.message || '';
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        setError('This email is already registered. Try signing in instead.');
+      } else if (msg.includes('valid email') || msg.includes('invalid')) {
+        setError('Please enter a valid email address.');
+      } else {
+        setError(msg || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- Confirmation screen after successful sign-up ---
+  if (signedUpEmail) {
+    return (
+      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <View style={styles.confirmContainer}>
+          <View style={styles.confirmCard}>
+            <View style={styles.confirmIconCircle}>
+              <FontAwesome name="envelope-o" size={32} color="#6B46C1" />
+            </View>
+
+            <Text style={styles.confirmTitle}>Confirm Your Email</Text>
+
+            <Text style={styles.confirmText}>
+              We sent a confirmation link to
+            </Text>
+            <View style={styles.emailBadge}>
+              <FontAwesome name="at" size={13} color="#6B46C1" />
+              <Text style={styles.emailBadgeText}>{signedUpEmail}</Text>
+            </View>
+
+            <View style={styles.stepsContainer}>
+              <View style={styles.stepRow}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>1</Text>
+                </View>
+                <Text style={styles.stepText}>Open your email inbox</Text>
+              </View>
+              <View style={styles.stepRow}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>2</Text>
+                </View>
+                <Text style={styles.stepText}>
+                  Click the confirmation link from SyllabusSnap
+                </Text>
+              </View>
+              <View style={styles.stepRow}>
+                <View style={styles.stepNumber}>
+                  <Text style={styles.stepNumberText}>3</Text>
+                </View>
+                <Text style={styles.stepText}>Come back here and sign in</Text>
+              </View>
+            </View>
+
+            <View style={styles.tipBox}>
+              <FontAwesome name="lightbulb-o" size={14} color="#f59e0b" />
+              <Text style={styles.tipText}>
+                Don't see the email? Check your spam or junk folder.
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.replace('/(auth)/sign-in')}
+              activeOpacity={0.8}
+            >
+              <FontAwesome name="arrow-left" size={14} color="#fff" />
+              <Text style={styles.buttonText}>Go to Sign In</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.resendBtn}
+              onPress={() => {
+                setSignedUpEmail('');
+                setEmail(signedUpEmail);
+                setPassword('');
+                setConfirmPassword('');
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.resendText}>
+                Didn't receive it?{' '}
+                <Text style={styles.resendBold}>Try again</Text>
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // --- Sign-up form ---
+  return (
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.inner}>
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <FontAwesome name="graduation-cap" size={28} color="#fff" />
+              </View>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>
+                Start organizing your semester today
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              {error ? (
+                <View style={styles.errorBox}>
+                  <FontAwesome name="exclamation-circle" size={14} color="#dc2626" />
+                  <Text style={styles.errorText}>{error}</Text>
+                </View>
+              ) : null}
+
+              <Text style={styles.label}>Email address</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="you@university.edu"
+                placeholderTextColor="#c0c0cc"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+                returnKeyType="next"
+              />
+
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="At least 6 characters"
+                placeholderTextColor="#c0c0cc"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="new-password"
+                returnKeyType="next"
+              />
+
+              <Text style={styles.label}>Confirm password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Re-enter your password"
+                placeholderTextColor="#c0c0cc"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoComplete="new-password"
+                returnKeyType="done"
+                onSubmitEditing={handleSignUp}
+              />
+
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleSignUp}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <>
+                    <FontAwesome name="user-plus" size={14} color="#fff" />
+                    <Text style={styles.buttonText}>Create Account</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.footer}>
+              <Link href="/(auth)/sign-in" asChild>
+                <TouchableOpacity activeOpacity={0.7}>
+                  <Text style={styles.linkText}>
+                    Already have an account?{' '}
+                    <Text style={styles.linkBold}>Sign In</Text>
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
+          </View>
+        </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: '#FAF9F5',
+  },
+  scroll: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  inner: {
+    paddingHorizontal: 24,
+    paddingVertical: 32,
+    maxWidth: 440,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+  logoContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    backgroundColor: '#6B46C1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#6B46C1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#1e1b4b',
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  form: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: '#6B46C1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 6,
+    marginTop: 14,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    backgroundColor: '#fafafa',
+    paddingHorizontal: 16,
+    fontSize: 15,
+    color: '#111',
+  },
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fef2f2',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#fecaca',
+  },
+  errorText: {
+    flex: 1,
+    color: '#dc2626',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  button: {
+    flexDirection: 'row',
+    height: 50,
+    backgroundColor: '#6B46C1',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+    gap: 8,
+    shadowColor: '#6B46C1',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  linkBold: {
+    color: '#6B46C1',
+    fontWeight: '700',
+  },
+  // --- Confirmation screen ---
+  confirmContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  confirmCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 32,
+    width: '100%',
+    maxWidth: 420,
+    alignItems: 'center',
+    shadowColor: '#6B46C1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  confirmIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#eef2ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  confirmTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1e1b4b',
+    marginBottom: 8,
+  },
+  confirmText: {
+    fontSize: 15,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  emailBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#eef2ff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    marginTop: 8,
+    marginBottom: 20,
+  },
+  emailBadgeText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4338ca',
+  },
+  stepsContainer: {
+    width: '100%',
+    gap: 12,
+    marginBottom: 20,
+  },
+  stepRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepNumberText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#6B46C1',
+  },
+  stepText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  tipBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fffbeb',
+    borderRadius: 10,
+    padding: 12,
+    width: '100%',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#fef3c7',
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#92400e',
+    fontWeight: '500',
+  },
+  resendBtn: {
+    marginTop: 16,
+  },
+  resendText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  resendBold: {
+    color: '#6B46C1',
+    fontWeight: '700',
+  },
+});
