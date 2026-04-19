@@ -40,6 +40,7 @@ export function useSemesters() {
       const { data, error } = await supabase
         .from('semesters')
         .select('*')
+        .order('start_date', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Semester[];
