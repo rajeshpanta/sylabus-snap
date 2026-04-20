@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  ActivityIndicator, Alert, Platform, Linking,
+  ActivityIndicator, Alert, Platform, Linking, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,21 +13,23 @@ import { COLORS } from '@/lib/constants';
 import { useAppStore } from '@/store/appStore';
 import { getProducts, purchaseProduct, restorePurchases, PRODUCT_IDS, setupPurchaseListeners } from '@/lib/purchases';
 
+const { width: SCREEN_W } = Dimensions.get('window');
+
 const FEATURES = [
   {
     icon: 'camera' as const,
     title: 'Unlimited Scans & Courses',
-    desc: 'Scan unlimited syllabi and add as many courses as you need. No limits.',
+    desc: 'Scan unlimited syllabi and add as many courses as you need.',
   },
   {
     icon: 'line-chart' as const,
     title: 'Grade Scale & Forecasting',
-    desc: 'Customize grading scales, forecast your GPA, and track grade trends.',
+    desc: 'Customize grading scales and forecast your final GPA.',
   },
   {
     icon: 'bell' as const,
     title: 'Advance Reminders & Sync',
-    desc: 'Get 1-day and 3-day advance reminders. Sync tasks to your device calendar.',
+    desc: 'Get 1-day and 3-day advance reminders. Sync to calendar.',
   },
 ];
 
@@ -51,16 +53,12 @@ export default function PaywallScreen() {
 
     const removeSubs = setupPurchaseListeners(
       () => {
-        // Purchase succeeded
         setIsPro(true);
         setLoading(false);
         if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.back();
+        handleClose();
       },
-      () => {
-        // Purchase error (user cancel handled in purchase())
-        setLoading(false);
-      },
+      () => { setLoading(false); },
     );
 
     return removeSubs;
@@ -69,17 +67,20 @@ export default function PaywallScreen() {
   const annualPrice = annualSub?.displayPrice ?? '$19.99';
   const monthlyPrice = monthlySub?.displayPrice ?? '$3.99';
 
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)' as any);
+    }
+  };
+
   const handlePurchase = async () => {
     const productId = selectedPlan === 'annual' ? PRODUCT_IDS.annual : PRODUCT_IDS.monthly;
-
     setLoading(true);
     try {
       const didPurchase = await purchaseProduct(productId);
-      if (!didPurchase) {
-        // User cancelled
-        setLoading(false);
-      }
-      // Success handled by purchaseUpdatedListener above
+      if (!didPurchase) setLoading(false);
     } catch (err: any) {
       setLoading(false);
       Alert.alert('Purchase Failed', err.message ?? 'Something went wrong. Please try again.');
@@ -94,7 +95,7 @@ export default function PaywallScreen() {
         setIsPro(true);
         if (Platform.OS === 'ios') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         Alert.alert('Restored', 'Your Pro subscription has been restored.', [
-          { text: 'OK', onPress: () => router.back() },
+          { text: 'OK', onPress: handleClose },
         ]);
       } else {
         Alert.alert('No Subscription Found', 'We couldn\'t find an active subscription for this account.');
@@ -108,27 +109,26 @@ export default function PaywallScreen() {
 
   return (
     <View style={styles.screen}>
-      <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
+        {/* Fixed close button outside ScrollView */}
+        <TouchableOpacity style={styles.closeBtn} onPress={handleClose} hitSlop={16}>
+          <FontAwesome name="times" size={20} color={COLORS.ink2} />
+        </TouchableOpacity>
 
-          {/* Close button */}
-          <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()} hitSlop={12}>
-            <FontAwesome name="times" size={18} color={COLORS.ink2} />
-          </TouchableOpacity>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
           {/* Hero */}
           <LinearGradient
-            colors={['#6B46C1', '#9F7AEA']}
+            colors={['#6B46C1', '#8B5CF6', '#A78BFA']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.hero}
           >
             <View style={styles.heroGlow} />
-            <FontAwesome name="star" size={20} color="rgba(255,255,255,0.9)" />
-            <Text style={styles.heroTitle}>
-              SyllabusSnap{'\n'}
-              <Text style={styles.heroTitleAccent}>Pro</Text>
-            </Text>
+            <View style={styles.heroGlow2} />
+            <FontAwesome name="star" size={24} color="rgba(255,255,255,0.85)" />
+            <Text style={styles.heroTitle}>SyllabusSnap</Text>
+            <Text style={styles.heroTitleBold}>Pro</Text>
             <Text style={styles.heroSubtitle}>
               Everything you need to ace your semester.
             </Text>
@@ -153,7 +153,7 @@ export default function PaywallScreen() {
           {/* Plan Selection */}
           <Text style={styles.sectionLabel}>CHOOSE YOUR PLAN</Text>
 
-          {/* Monthly — with free trial */}
+          {/* Monthly */}
           <TouchableOpacity
             style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
             onPress={() => setSelectedPlan('monthly')}
@@ -176,7 +176,7 @@ export default function PaywallScreen() {
             )}
           </TouchableOpacity>
 
-          {/* Annual — best value */}
+          {/* Annual */}
           <TouchableOpacity
             style={[styles.planCard, selectedPlan === 'annual' && styles.planCardSelected]}
             onPress={() => setSelectedPlan('annual')}
@@ -197,8 +197,8 @@ export default function PaywallScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* CTA Button */}
-          <TouchableOpacity onPress={handlePurchase} disabled={loading} activeOpacity={0.85} style={{ marginTop: 24 }}>
+          {/* CTA */}
+          <TouchableOpacity onPress={handlePurchase} disabled={loading} activeOpacity={0.85} style={{ marginTop: 20 }}>
             <LinearGradient
               colors={['#6B46C1', '#553C9A']}
               start={{ x: 0, y: 0 }}
@@ -221,7 +221,7 @@ export default function PaywallScreen() {
               : `${annualPrice} billed annually. Cancel anytime.`}
           </Text>
 
-          {/* Footer Links */}
+          {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity onPress={handleRestore} disabled={restoring}>
               <Text style={styles.footerLink}>{restoring ? 'Restoring...' : 'Restore'}</Text>
@@ -245,78 +245,87 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: COLORS.paper },
   safe: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
+  content: { paddingHorizontal: 20, paddingBottom: 40 },
 
-  // Close
+  // Close — fixed at top right, outside scroll
   closeBtn: {
-    alignSelf: 'flex-end',
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(28,27,31,0.08)',
+    position: 'absolute', top: 56, right: 20, zIndex: 10,
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.85)',
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
 
-  // Hero
+  // Hero — bigger, bolder
   hero: {
-    borderRadius: 22, padding: 24, marginBottom: 28,
+    borderRadius: 24, paddingVertical: 36, paddingHorizontal: 28,
+    marginBottom: 28, marginTop: 8,
     overflow: 'hidden', position: 'relative',
+    minHeight: 200,
   },
   heroGlow: {
-    position: 'absolute', right: -30, bottom: -30,
-    width: 140, height: 140, borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    position: 'absolute', right: -40, top: -40,
+    width: 180, height: 180, borderRadius: 90,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  heroGlow2: {
+    position: 'absolute', right: 30, bottom: -60,
+    width: 120, height: 120, borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   heroTitle: {
-    fontSize: 32, fontWeight: '700', color: '#fff',
-    marginTop: 14, lineHeight: 38, letterSpacing: -0.5,
+    fontSize: 36, fontWeight: '800', color: '#fff',
+    marginTop: 16, letterSpacing: -1,
   },
-  heroTitleAccent: {
-    fontSize: 32, fontWeight: '700',
-    color: 'rgba(255,255,255,0.75)',
+  heroTitleBold: {
+    fontSize: 40, fontWeight: '800',
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: -1, marginTop: -4,
   },
   heroSubtitle: {
-    fontSize: 15, color: 'rgba(255,255,255,0.8)',
-    marginTop: 8, lineHeight: 20,
+    fontSize: 16, color: 'rgba(255,255,255,0.85)',
+    marginTop: 10, lineHeight: 22, fontWeight: '500',
   },
 
-  // Section Label
+  // Section
   sectionLabel: {
-    fontSize: 12, fontWeight: '700', color: COLORS.ink3,
-    letterSpacing: 1, marginBottom: 12,
+    fontSize: 13, fontWeight: '700', color: COLORS.ink3,
+    letterSpacing: 1.2, marginBottom: 12,
   },
 
   // Features
   featureList: {
-    backgroundColor: COLORS.card, borderRadius: 18,
-    paddingHorizontal: 16, marginBottom: 28,
+    backgroundColor: COLORS.card, borderRadius: 20,
+    paddingHorizontal: 18, marginBottom: 28,
     borderWidth: 0.5, borderColor: COLORS.line,
   },
   featureRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 16, gap: 14,
+    paddingVertical: 18, gap: 14,
   },
   featureRowBorder: {
     borderBottomWidth: 0.5, borderBottomColor: COLORS.line,
   },
   featureIcon: {
-    width: 42, height: 42, borderRadius: 12,
+    width: 46, height: 46, borderRadius: 14,
     backgroundColor: COLORS.brand50,
     alignItems: 'center', justifyContent: 'center',
   },
   featureTitle: {
-    fontSize: 15, fontWeight: '600', color: COLORS.ink,
-    marginBottom: 2,
+    fontSize: 16, fontWeight: '700', color: COLORS.ink,
+    marginBottom: 3,
   },
   featureDesc: {
-    fontSize: 13, color: COLORS.ink3, lineHeight: 17,
+    fontSize: 14, color: COLORS.ink3, lineHeight: 19,
   },
 
-  // Plan Cards
+  // Plans
   planCard: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.card, borderRadius: 18,
-    padding: 16, marginBottom: 10,
-    borderWidth: 1.5, borderColor: COLORS.line,
+    padding: 18, marginBottom: 10,
+    borderWidth: 2, borderColor: COLORS.line,
   },
   planCardSelected: {
     backgroundColor: COLORS.brand50,
@@ -324,56 +333,44 @@ const styles = StyleSheet.create({
   },
   planRadio: { marginRight: 14 },
   radioOuter: {
-    width: 22, height: 22, borderRadius: 11,
-    borderWidth: 2, borderColor: COLORS.ink3,
+    width: 24, height: 24, borderRadius: 12,
+    borderWidth: 2.5, borderColor: COLORS.ink3,
     alignItems: 'center', justifyContent: 'center',
   },
-  radioOuterSelected: {
-    borderColor: COLORS.brand,
-  },
+  radioOuterSelected: { borderColor: COLORS.brand },
   radioInner: {
-    width: 12, height: 12, borderRadius: 6,
+    width: 13, height: 13, borderRadius: 6.5,
     backgroundColor: COLORS.brand,
   },
-  planName: {
-    fontSize: 16, fontWeight: '600', color: COLORS.ink,
-  },
+  planName: { fontSize: 17, fontWeight: '700', color: COLORS.ink },
   planPrice: {
-    fontSize: 20, fontWeight: '700', color: COLORS.ink,
+    fontSize: 22, fontWeight: '800', color: COLORS.ink,
     marginTop: 2,
   },
-  planPeriod: {
-    fontSize: 14, fontWeight: '400', color: COLORS.ink2,
-  },
-  planSub: {
-    fontSize: 12, color: COLORS.ink3, marginTop: 2, minHeight: 16,
-  },
+  planPeriod: { fontSize: 14, fontWeight: '400', color: COLORS.ink2 },
+  planSub: { fontSize: 13, color: COLORS.ink3, marginTop: 2, minHeight: 16 },
   saveBadge: {
     backgroundColor: COLORS.teal,
-    paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
   },
   saveBadgeText: {
-    fontSize: 11, fontWeight: '700', color: '#fff',
-    letterSpacing: 0.5,
+    fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.5,
   },
   trialBadge: {
     backgroundColor: COLORS.brand,
-    paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
   },
   trialBadgeText: {
-    fontSize: 10, fontWeight: '700', color: '#fff',
-    letterSpacing: 0.5,
+    fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.5,
   },
 
   // CTA
   ctaBtn: {
-    height: 56, borderRadius: 16,
+    height: 58, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center',
   },
   ctaText: {
-    fontSize: 17, fontWeight: '600', color: '#fff',
+    fontSize: 18, fontWeight: '700', color: '#fff',
     letterSpacing: 0.3,
   },
   finePrint: {
@@ -384,12 +381,8 @@ const styles = StyleSheet.create({
   // Footer
   footer: {
     flexDirection: 'row', justifyContent: 'center',
-    alignItems: 'center', marginTop: 24,
+    alignItems: 'center', marginTop: 24, paddingBottom: 20,
   },
-  footerLink: {
-    fontSize: 13, color: COLORS.ink3, fontWeight: '500',
-  },
-  footerDot: {
-    fontSize: 13, color: COLORS.ink3,
-  },
+  footerLink: { fontSize: 13, color: COLORS.ink3, fontWeight: '500' },
+  footerDot: { fontSize: 13, color: COLORS.ink3 },
 });
