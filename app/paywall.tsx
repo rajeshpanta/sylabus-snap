@@ -136,7 +136,7 @@ export default function PaywallScreen() {
             {FEATURES.map((f, i) => (
               <View key={i} style={[styles.featureRow, i < FEATURES.length - 1 && styles.featureRowBorder]}>
                 <View style={styles.featureIcon}>
-                  <FontAwesome name={f.icon} size={18} color={COLORS.brand} />
+                  <FontAwesome name={f.icon} size={15} color={COLORS.brand} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.featureTitle}>{f.title}</Text>
@@ -288,81 +288,81 @@ const styles = StyleSheet.create({
 
   // Features
   featureList: {
-    backgroundColor: COLORS.card, borderRadius: 18,
-    paddingHorizontal: 16, marginBottom: 28,
+    backgroundColor: COLORS.card, borderRadius: 16,
+    paddingHorizontal: 14, marginBottom: 24,
     borderWidth: 0.5, borderColor: COLORS.line,
   },
   featureRow: {
     flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 15, gap: 14,
+    paddingVertical: 12, gap: 12,
   },
   featureRowBorder: {
     borderBottomWidth: 0.5, borderBottomColor: COLORS.line,
   },
   featureIcon: {
-    width: 42, height: 42, borderRadius: 12,
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: COLORS.brand50,
     alignItems: 'center', justifyContent: 'center',
   },
   featureTitle: {
-    fontSize: 15, fontWeight: '700', color: COLORS.ink,
-    marginBottom: 2,
+    fontSize: 14, fontWeight: '600', color: COLORS.ink,
+    marginBottom: 1,
   },
   featureDesc: {
-    fontSize: 13, color: COLORS.ink3, lineHeight: 17,
+    fontSize: 12, color: COLORS.ink3, lineHeight: 16,
   },
 
   // Plans
   planCard: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: COLORS.card, borderRadius: 18,
-    padding: 18, marginBottom: 10,
-    borderWidth: 2, borderColor: COLORS.line,
+    backgroundColor: COLORS.card, borderRadius: 14,
+    padding: 14, marginBottom: 8,
+    borderWidth: 1.5, borderColor: COLORS.line,
   },
   planCardSelected: {
     backgroundColor: COLORS.brand50,
     borderColor: COLORS.brand,
   },
-  planRadio: { marginRight: 14 },
+  planRadio: { marginRight: 12 },
   radioOuter: {
-    width: 24, height: 24, borderRadius: 12,
-    borderWidth: 2.5, borderColor: COLORS.ink3,
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 2, borderColor: COLORS.ink3,
     alignItems: 'center', justifyContent: 'center',
   },
   radioOuterSelected: { borderColor: COLORS.brand },
   radioInner: {
-    width: 13, height: 13, borderRadius: 6.5,
+    width: 10, height: 10, borderRadius: 5,
     backgroundColor: COLORS.brand,
   },
-  planName: { fontSize: 16, fontWeight: '700', color: COLORS.ink },
+  planName: { fontSize: 14, fontWeight: '600', color: COLORS.ink },
   planPrice: {
-    fontSize: 20, fontWeight: '800', color: COLORS.ink,
-    marginTop: 2,
+    fontSize: 17, fontWeight: '700', color: COLORS.ink,
+    marginTop: 1,
   },
-  planPeriod: { fontSize: 14, fontWeight: '400', color: COLORS.ink2 },
-  planSub: { fontSize: 13, color: COLORS.ink3, marginTop: 2, minHeight: 16 },
+  planPeriod: { fontSize: 12, fontWeight: '400', color: COLORS.ink2 },
+  planSub: { fontSize: 11, color: COLORS.ink3, marginTop: 1, minHeight: 14 },
   saveBadge: {
     backgroundColor: COLORS.teal,
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
   },
   saveBadgeText: {
-    fontSize: 12, fontWeight: '800', color: '#fff', letterSpacing: 0.5,
+    fontSize: 10, fontWeight: '700', color: '#fff', letterSpacing: 0.5,
   },
   trialBadge: {
     backgroundColor: COLORS.brand,
-    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
   },
   trialBadgeText: {
-    fontSize: 11, fontWeight: '800', color: '#fff', letterSpacing: 0.5,
+    fontSize: 10, fontWeight: '700', color: '#fff', letterSpacing: 0.5,
   },
 
   // CTA
   ctaBtn: {
-    height: 58, borderRadius: 18,
+    height: 50, borderRadius: 14,
     alignItems: 'center', justifyContent: 'center',
   },
   ctaText: {
-    fontSize: 18, fontWeight: '700', color: '#fff',
+    fontSize: 15, fontWeight: '600', color: '#fff',
     letterSpacing: 0.3,
   },
   finePrint: {
