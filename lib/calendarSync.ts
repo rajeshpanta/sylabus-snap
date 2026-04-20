@@ -3,8 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 import { supabase } from '@/lib/supabase';
 import type { Task } from '@/types/database';
 
-const CALENDAR_ID_KEY = 'syllabussnap_calendar_id';
-const SYNCED_ENABLED_KEY = 'syllabussnap_cal_enabled';
+const CALENDAR_ID_KEY = 'semora_calendar_id';
+const SYNCED_ENABLED_KEY = 'semora_cal_enabled';
 
 // Lazy-load expo-calendar to avoid crash in Expo Go
 async function getCalendarModule() {

@@ -6,8 +6,8 @@ import type { Semester } from '@/types/database';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 
-const THEME_KEY = 'syllabussnap_theme';
-const SEMESTER_KEY = 'syllabussnap_semester';
+const THEME_KEY = 'semora_theme';
+const SEMESTER_KEY = 'semora_semester';
 
 function getItem(key: string): string | null {
   if (Platform.OS === 'web') return null;
