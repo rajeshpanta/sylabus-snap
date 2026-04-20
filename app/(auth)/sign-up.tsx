@@ -91,7 +91,7 @@ export default function SignUpScreen() {
                   <Text style={styles.stepNumberText}>2</Text>
                 </View>
                 <Text style={styles.stepText}>
-                  Click the confirmation link from SyllabusSnap
+                  Click the confirmation link from Semora
                 </Text>
               </View>
               <View style={styles.stepRow}>

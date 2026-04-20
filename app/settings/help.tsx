@@ -8,7 +8,7 @@ import { COLORS } from '@/lib/constants';
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'How do I scan a syllabus?',
-    a: 'Tap the Scan tab, then choose to take a photo or pick a file. SyllabusSnap uses AI to extract assignments, exams, and deadlines automatically.',
+    a: 'Tap the Scan tab, then choose to take a photo or pick a file. Semora uses AI to extract assignments, exams, and deadlines automatically.',
   },
   {
     q: 'Can I edit tasks after scanning?',
@@ -66,10 +66,10 @@ export default function HelpScreen() {
           <TouchableOpacity
             style={styles.contactRow}
             activeOpacity={0.7}
-            onPress={() => Linking.openURL('mailto:help@syllabussnap.com')}
+            onPress={() => Linking.openURL('mailto:help@semora.app')}
           >
             <FontAwesome name="envelope-o" size={16} color={COLORS.ink2} />
-            <Text style={styles.contactText}>help@syllabussnap.com</Text>
+            <Text style={styles.contactText}>help@semora.app</Text>
             <FontAwesome name="chevron-right" size={11} color={COLORS.ink3} />
           </TouchableOpacity>
         </View>

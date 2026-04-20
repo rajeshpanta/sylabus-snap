@@ -45,7 +45,7 @@ export default function SignInScreen() {
 
       if (msg.includes('email not confirmed') || code === 'email_not_confirmed') {
         setError(
-          'Your email hasn\'t been confirmed yet. Please check your inbox for a confirmation link from SyllabusSnap.'
+          'Your email hasn\'t been confirmed yet. Please check your inbox for a confirmation link from Semora.'
         );
         setErrorType('confirm');
       } else if (
@@ -79,7 +79,7 @@ export default function SignInScreen() {
             <View style={styles.logoContainer}>
               <FontAwesome name="graduation-cap" size={28} color="#fff" />
             </View>
-            <Text style={styles.title}>SyllabusSnap</Text>
+            <Text style={styles.title}>Semora</Text>
             <Text style={styles.subtitle}>Never miss a deadline again</Text>
           </View>
 

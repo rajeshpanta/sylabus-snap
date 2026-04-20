@@ -122,7 +122,7 @@ export default function PaywallScreen() {
             <View style={styles.heroGlow} />
             <View style={styles.proLabel}>
               <FontAwesome name="star" size={11} color={COLORS.brand100} />
-              <Text style={styles.proLabelText}>SYLLABUSSNAP PRO</Text>
+              <Text style={styles.proLabelText}>SEMORA PRO</Text>
             </View>
             <Text style={styles.heroTitle}>Unlimited scans, smart plans, grade forecasts.</Text>
             <Text style={styles.heroSubtitle}>

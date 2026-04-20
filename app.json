@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "SyllabusSnap",
-    "slug": "SyllabusSnap",
+    "name": "Semora",
+    "slug": "semora",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "syllabussnap",
+    "scheme": "semora",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -16,7 +16,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.rajeshpanta.syllabussnap",
-      "appleTeamId": "7T9897GFKH"
+      "appleTeamId": "7T9897GFKH",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "bundler": "metro",
@@ -31,7 +34,7 @@
       [
         "expo-calendar",
         {
-          "calendarPermission": "SyllabusSnap needs calendar access to sync your task due dates."
+          "calendarPermission": "Semora needs calendar access to sync your task due dates."
         }
       ],
       [
@@ -44,8 +47,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "SyllabusSnap needs photo access to upload syllabus images.",
-          "cameraPermission": "SyllabusSnap needs camera access to scan syllabi."
+          "photosPermission": "Semora needs photo access to upload syllabus images.",
+          "cameraPermission": "Semora needs camera access to scan syllabi."
         }
       ],
       "expo-document-picker",
@@ -53,6 +56,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "063fbdf9-33e3-49b4-8b0b-ba9d6f18490b"
+      }
+    },
+    "owner": "smallpantas-organization"
   }
 }

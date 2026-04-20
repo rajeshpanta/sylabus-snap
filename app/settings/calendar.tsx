@@ -32,7 +32,7 @@ export default function CalendarSyncSettings() {
       // Turn off
       Alert.alert(
         'Remove Calendar Sync',
-        'This will delete the SyllabusSnap calendar and all synced events from your device.',
+        'This will delete the Semora calendar and all synced events from your device.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -57,7 +57,7 @@ export default function CalendarSyncSettings() {
       if (!isPro) {
         Alert.alert(
           'Pro Feature',
-          'Calendar sync is available with SyllabusSnap Pro.',
+          'Calendar sync is available with Semora Pro.',
           [
             { text: 'Upgrade', onPress: () => router.push('/paywall' as any) },
             { text: 'Cancel', style: 'cancel' },
@@ -80,7 +80,7 @@ export default function CalendarSyncSettings() {
       if (!hasPermission) {
         Alert.alert(
           'Permission Required',
-          'SyllabusSnap needs calendar access to sync your tasks. Please enable it in Settings.',
+          'Semora needs calendar access to sync your tasks. Please enable it in Settings.',
         );
         return;
       }
@@ -131,7 +131,7 @@ export default function CalendarSyncSettings() {
             <View style={{ flex: 1, marginLeft: 8 }}>
               <Text style={styles.rowLabel}>Calendar Sync</Text>
               <Text style={styles.rowSub}>
-                {synced ? 'Tasks are synced to "SyllabusSnap" calendar' : 'Push tasks as calendar events'}
+                {synced ? 'Tasks are synced to "Semora" calendar' : 'Push tasks as calendar events'}
               </Text>
             </View>
             {syncing ? (
@@ -158,7 +158,7 @@ export default function CalendarSyncSettings() {
             </View>
 
             <Text style={styles.hint}>
-              A "SyllabusSnap" calendar is created on your device. Incomplete tasks from the current semester are synced as events. Completed tasks are not included.
+              A "Semora" calendar is created on your device. Incomplete tasks from the current semester are synced as events. Completed tasks are not included.
             </Text>
           </>
         )}

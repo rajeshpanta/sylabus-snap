@@ -101,7 +101,7 @@ export default function MeScreen() {
           <View style={{ position: 'relative' }}>
             <View style={styles.proLabel}>
               <FontAwesome name="star" size={11} color={COLORS.brand100} />
-              <Text style={styles.proLabelText}>SYLLABUSSNAP PRO</Text>
+              <Text style={styles.proLabelText}>SEMORA PRO</Text>
             </View>
             {isPro ? (
               <>
@@ -158,7 +158,7 @@ export default function MeScreen() {
         <Text style={styles.sectionTitle}>Support</Text>
         <View style={styles.settingsCard}>
           <SettingsRow icon="question-circle-o" label="Help & FAQ" onPress={() => router.push('/settings/help')} />
-          <SettingsRow icon="star-o" label="Rate SyllabusSnap" last onPress={handleRate} />
+          <SettingsRow icon="star-o" label="Rate Semora" last onPress={handleRate} />
         </View>
 
         {/* Sign out */}
@@ -172,7 +172,7 @@ export default function MeScreen() {
           <Text style={styles.deleteText}>Delete Account</Text>
         </TouchableOpacity>
 
-        <Text style={styles.version}>SyllabusSnap 1.0.0</Text>
+        <Text style={styles.version}>Semora 1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -181,7 +181,7 @@ export default function MeScreen() {
 function SettingsRow({ icon, label, value, pro, last, onPress }: { icon: string; label: string; value?: string; pro?: boolean; last?: boolean; onPress?: () => void }) {
   const handlePress = () => {
     if (pro) {
-      Alert.alert('SyllabusSnap Pro', 'This feature is available with Pro. Coming soon!');
+      Alert.alert('Semora Pro', 'This feature is available with Pro. Coming soon!');
     } else if (onPress) {
       onPress();
     }

@@ -50,7 +50,7 @@ export default function NotificationSettings() {
     if (!isPro && (key === 'reminder_1day' || key === 'reminder_3day')) {
       Alert.alert(
         'Pro Feature',
-        'Advance reminders are available with SyllabusSnap Pro. Free users get same-day reminders.',
+        'Advance reminders are available with Semora Pro. Free users get same-day reminders.',
         [
           { text: 'Upgrade', onPress: () => router.push('/paywall' as any) },
           { text: 'Cancel', style: 'cancel' },

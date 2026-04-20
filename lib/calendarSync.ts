@@ -46,10 +46,10 @@ async function getOrCreateCalendar(): Promise<string | null> {
   const defaultSource =
     Platform.OS === 'ios'
       ? await getDefaultCalendarSource(Calendar)
-      : { isLocalAccount: true, name: 'SyllabusSnap', type: 'LOCAL' as any };
+      : { isLocalAccount: true, name: 'Semora', type: 'LOCAL' as any };
 
   const id = await Calendar.createCalendarAsync({
-    title: 'SyllabusSnap',
+    title: 'Semora',
     color: '#6B46C1',
     entityType: Calendar.EntityTypes.EVENT,
     source: defaultSource as any,
@@ -67,7 +67,7 @@ async function getDefaultCalendarSource(Calendar: any) {
   const defaultCal = calendars.find(
     (c: any) => c.source?.name === 'iCloud' || c.source?.name === 'Default',
   );
-  return defaultCal?.source ?? calendars[0]?.source ?? { name: 'SyllabusSnap', isLocalAccount: true };
+  return defaultCal?.source ?? calendars[0]?.source ?? { name: 'Semora', isLocalAccount: true };
 }
 
 // ── Sync logic ─────────────────────────────────────────────
@@ -192,7 +192,7 @@ export async function syncAllTasks(semesterId: string | null): Promise<number> {
 }
 
 /**
- * Remove the SyllabusSnap calendar and all synced events.
+ * Remove the Semora calendar and all synced events.
  */
 export async function unsyncAll(): Promise<void> {
   if (Platform.OS === 'web') return;
