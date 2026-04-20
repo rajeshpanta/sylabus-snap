@@ -118,21 +118,17 @@ export default function PaywallScreen() {
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} bounces={false}>
 
           {/* Hero */}
-          <LinearGradient
-            colors={['#6B46C1', '#8B5CF6', '#A78BFA']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.hero}
-          >
+          <View style={styles.hero}>
             <View style={styles.heroGlow} />
-            <View style={styles.heroGlow2} />
-            <FontAwesome name="star" size={24} color="rgba(255,255,255,0.85)" />
-            <Text style={styles.heroTitle}>SyllabusSnap</Text>
-            <Text style={styles.heroTitleBold}>Pro</Text>
+            <View style={styles.proLabel}>
+              <FontAwesome name="star" size={11} color={COLORS.brand100} />
+              <Text style={styles.proLabelText}>SYLLABUSSNAP PRO</Text>
+            </View>
+            <Text style={styles.heroTitle}>Unlimited scans, smart plans, grade forecasts.</Text>
             <Text style={styles.heroSubtitle}>
               Everything you need to ace your semester.
             </Text>
-          </LinearGradient>
+          </View>
 
           {/* Features */}
           <Text style={styles.sectionLabel}>WHAT YOU GET</Text>
@@ -257,34 +253,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
   },
 
-  // Hero
+  // Hero — dark card matching Me tab style
   hero: {
-    borderRadius: 22, paddingVertical: 28, paddingHorizontal: 24,
-    marginBottom: 28, marginTop: 8,
+    backgroundColor: COLORS.ink,
+    borderRadius: 22, padding: 20,
+    marginBottom: 24, marginTop: 8,
     overflow: 'hidden', position: 'relative',
   },
   heroGlow: {
     position: 'absolute', right: -30, top: -30,
     width: 140, height: 140, borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: COLORS.brand, opacity: 0.4,
   },
-  heroGlow2: {
-    position: 'absolute', right: 20, bottom: -50,
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+  proLabel: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8,
+  },
+  proLabelText: {
+    fontSize: 12, fontWeight: '800', letterSpacing: 1.5, color: COLORS.brand100,
   },
   heroTitle: {
-    fontSize: 28, fontWeight: '800', color: '#fff',
-    marginTop: 12, letterSpacing: -0.5,
-  },
-  heroTitleBold: {
-    fontSize: 28, fontWeight: '800',
-    color: 'rgba(255,255,255,0.65)',
-    letterSpacing: -0.5, marginTop: -2,
+    fontSize: 20, fontWeight: '700', color: '#fff',
+    lineHeight: 26, maxWidth: 240,
   },
   heroSubtitle: {
-    fontSize: 15, color: 'rgba(255,255,255,0.8)',
-    marginTop: 8, lineHeight: 20,
+    fontSize: 14, color: 'rgba(255,255,255,0.55)',
+    marginTop: 6,
   },
 
   // Section
