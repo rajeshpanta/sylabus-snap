@@ -15,9 +15,9 @@
       "backgroundColor": "#0c0b24"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.rajeshpanta.syllabussnap",
-      "buildNumber": "4",
+      "buildNumber": "5",
       "appleTeamId": "7T9897GFKH",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
