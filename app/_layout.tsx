@@ -183,7 +183,7 @@ function RootLayoutNav() {
       <ThemeProvider value={DefaultTheme}>
         <AuthProvider>
           <AuthGate>
-            <Stack>
+            <Stack screenOptions={{ headerBackTitle: 'Back' }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="semester/new" options={{ presentation: 'modal', title: 'New Semester' }} />
