@@ -16,8 +16,8 @@ import {
 
 // Product IDs — must match App Store Connect
 export const PRODUCT_IDS = {
-  monthly: 'syllabussnap_pro_monthly',
-  annual: 'syllabussnap_pro_annual',
+  monthly: 'semora_pro_monthly',
+  annual: 'semora_pro_annual',
 };
 
 const ALL_SKUS = [PRODUCT_IDS.monthly, PRODUCT_IDS.annual];
