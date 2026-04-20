@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, Platform, Alert,
+  ActivityIndicator, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -9,7 +10,6 @@ import * as Haptics from 'expo-haptics';
 import { useAppStore, findCurrentSemester } from '@/store/appStore';
 import { useSemesters, useCourses, useTasks, useDeleteSemester } from '@/lib/queries';
 import { COLORS, calculateGrade, DEFAULT_GRADE_SCALE } from '@/lib/constants';
-import { SemesterPicker } from '@/components/SemesterPicker';
 import { differenceInDays, isToday, isPast, addDays, format } from 'date-fns';
 import type { GradeThreshold } from '@/types/database';
 import type { TaskWithCourse } from '@/lib/queries';
@@ -19,6 +19,7 @@ type CourseFilter = 'all' | 'thisWeek' | 'upcoming';
 export default function CoursesScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<CourseFilter>('all');
+  const [showPicker, setShowPicker] = useState(false);
 
   const selectedSemesterId = useAppStore((s) => s.selectedSemesterId);
   const setSelectedSemester = useAppStore((s) => s.setSelectedSemester);
@@ -45,6 +46,12 @@ export default function CoursesScreen() {
     if (Platform.OS === 'ios') Haptics.selectionAsync();
   };
 
+  const handleSelectSemester = (id: string) => {
+    setSelectedSemester(id);
+    setShowPicker(false);
+    if (Platform.OS === 'ios') Haptics.selectionAsync();
+  };
+
   // Helpers per course
   const getCourseTasks = (courseId: string) => tasks.filter((t) => t.course_id === courseId);
   const getNextTask = (courseId: string) => {
@@ -54,19 +61,15 @@ export default function CoursesScreen() {
   };
   const getPendingCount = (courseId: string) => getCourseTasks(courseId).filter((t) => !t.is_completed).length;
 
-  // Filter courses based on selected filter
+  // Filter courses
   const today = format(new Date(), 'yyyy-MM-dd');
   const weekEnd = format(addDays(new Date(), 7), 'yyyy-MM-dd');
 
   const filteredCourses = courses.filter((course) => {
     if (filter === 'all') return true;
     const courseTasks = getCourseTasks(course.id).filter((t) => !t.is_completed);
-    if (filter === 'thisWeek') {
-      return courseTasks.some((t) => t.due_date >= today && t.due_date <= weekEnd);
-    }
-    if (filter === 'upcoming') {
-      return courseTasks.some((t) => t.due_date > today);
-    }
+    if (filter === 'thisWeek') return courseTasks.some((t) => t.due_date >= today && t.due_date <= weekEnd);
+    if (filter === 'upcoming') return courseTasks.some((t) => t.due_date > today);
     return true;
   });
 
@@ -79,6 +82,14 @@ export default function CoursesScreen() {
     if (days === 1) return { text: 'tomorrow', urgent: true };
     if (days <= 3) return { text: `${days} days`, urgent: true };
     return { text: `in ${days} days`, urgent: false };
+  }
+
+  function getSemesterDateLabel(s: typeof semesters[0]): string {
+    if (!s.start_date && !s.end_date) return '';
+    const parts: string[] = [];
+    if (s.start_date) parts.push(format(new Date(s.start_date + 'T00:00:00'), 'MMM yyyy'));
+    if (s.end_date) parts.push(format(new Date(s.end_date + 'T00:00:00'), 'MMM yyyy'));
+    return parts.join(' – ');
   }
 
   if (semestersLoading && semesters.length === 0) {
@@ -94,19 +105,37 @@ export default function CoursesScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
             <Text style={styles.title}>Courses</Text>
-            <Text style={styles.subtitle}>
-              {courses.length} active{activeSemester ? ` · ${activeSemester.name}` : ''}
-            </Text>
+
+            {/* Semester selector */}
+            {activeSemester ? (
+              <TouchableOpacity
+                style={styles.semesterSelector}
+                onPress={() => semesters.length > 1 ? setShowPicker(true) : null}
+                activeOpacity={semesters.length > 1 ? 0.7 : 1}
+              >
+                <Text style={styles.semesterName}>{activeSemester.name}</Text>
+                {semesters.length > 1 && (
+                  <FontAwesome name="chevron-down" size={10} color={COLORS.ink3} style={{ marginLeft: 4 }} />
+                )}
+                <View style={styles.courseCountBadge}>
+                  <Text style={styles.courseCountText}>{courses.length}</Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.subtitle}>No semester selected</Text>
+            )}
           </View>
+
           <View style={styles.headerActions}>
             {activeSemester && (
               <>
                 <TouchableOpacity onPress={() => router.push(`/semester/${activeSemester.id}` as any)} hitSlop={8} style={styles.headerIconBtn}>
-                  <FontAwesome name="pencil" size={14} color={COLORS.ink3} />
+                  <FontAwesome name="pencil" size={13} color={COLORS.ink3} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
@@ -133,7 +162,7 @@ export default function CoursesScreen() {
                   hitSlop={8}
                   style={styles.headerIconBtn}
                 >
-                  <FontAwesome name="trash-o" size={14} color={COLORS.coral} />
+                  <FontAwesome name="trash-o" size={13} color={COLORS.coral} />
                 </TouchableOpacity>
               </>
             )}
@@ -143,24 +172,20 @@ export default function CoursesScreen() {
           </View>
         </View>
 
-        {/* Semester picker */}
-        {semesters.length > 1 && (
-          <View style={{ marginBottom: 16 }}>
-            <SemesterPicker semesters={semesters} selectedId={selectedSemesterId} onSelect={setSelectedSemester} />
-          </View>
-        )}
-
         {/* Filter pills */}
         <View style={styles.pills}>
-          <TouchableOpacity style={[styles.pill, filter === 'all' && styles.pillActive]} onPress={() => handleFilter('all')} activeOpacity={0.7}>
-            <Text style={filter === 'all' ? styles.pillTextActive : styles.pillText}>All</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.pill, filter === 'thisWeek' && styles.pillActive]} onPress={() => handleFilter('thisWeek')} activeOpacity={0.7}>
-            <Text style={filter === 'thisWeek' ? styles.pillTextActive : styles.pillText}>This week</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.pill, filter === 'upcoming' && styles.pillActive]} onPress={() => handleFilter('upcoming')} activeOpacity={0.7}>
-            <Text style={filter === 'upcoming' ? styles.pillTextActive : styles.pillText}>Upcoming</Text>
-          </TouchableOpacity>
+          {(['all', 'thisWeek', 'upcoming'] as const).map((f) => (
+            <TouchableOpacity
+              key={f}
+              style={[styles.pill, filter === f && styles.pillActive]}
+              onPress={() => handleFilter(f)}
+              activeOpacity={0.7}
+            >
+              <Text style={filter === f ? styles.pillTextActive : styles.pillText}>
+                {f === 'all' ? 'All' : f === 'thisWeek' ? 'This week' : 'Upcoming'}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Course cards */}
@@ -239,6 +264,46 @@ export default function CoursesScreen() {
           </TouchableOpacity>
         )}
       </ScrollView>
+
+      {/* Semester dropdown modal */}
+      <Modal visible={showPicker} transparent animationType="fade" onRequestClose={() => setShowPicker(false)}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowPicker(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Semester</Text>
+              <TouchableOpacity onPress={() => setShowPicker(false)} hitSlop={12}>
+                <FontAwesome name="times" size={16} color={COLORS.ink3} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalList} showsVerticalScrollIndicator={false}>
+              {semesters.map((s, i) => {
+                const isSelected = s.id === selectedSemesterId;
+                const dateLabel = getSemesterDateLabel(s);
+                return (
+                  <TouchableOpacity
+                    key={s.id}
+                    style={[styles.modalRow, i < semesters.length - 1 && styles.modalRowBorder]}
+                    onPress={() => handleSelectSemester(s.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.modalRowName, isSelected && { color: COLORS.brand }]}>{s.name}</Text>
+                      {dateLabel ? <Text style={styles.modalRowDate}>{dateLabel}</Text> : null}
+                    </View>
+                    {isSelected && <FontAwesome name="check" size={14} color={COLORS.brand} />}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+
+            <TouchableOpacity style={styles.modalAddBtn} onPress={() => { setShowPicker(false); handleNav('/semester/new'); }}>
+              <FontAwesome name="plus" size={12} color={COLORS.brand} />
+              <Text style={styles.modalAddText}>New Semester</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -246,17 +311,27 @@ export default function CoursesScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.paper },
   content: { padding: 18, paddingBottom: 120 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 6 },
-  title: { fontSize: 26, fontWeight: '600', color: COLORS.ink, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: COLORS.ink3, marginTop: 2 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+
+  // Header
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
+  title: { fontSize: 26, fontWeight: '700', color: COLORS.ink, letterSpacing: -0.5 },
+  subtitle: { fontSize: 14, color: COLORS.ink3, marginTop: 4 },
+  semesterSelector: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  semesterName: { fontSize: 15, fontWeight: '500', color: COLORS.ink2 },
+  courseCountBadge: { marginLeft: 8, backgroundColor: COLORS.brand50, paddingHorizontal: 7, paddingVertical: 1, borderRadius: 8 },
+  courseCountText: { fontSize: 12, fontWeight: '700', color: COLORS.brand },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 6 },
   headerIconBtn: { width: 32, height: 32, borderRadius: 10, backgroundColor: COLORS.card, borderWidth: 0.5, borderColor: COLORS.line, justifyContent: 'center', alignItems: 'center' },
   addBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: COLORS.brand, justifyContent: 'center', alignItems: 'center' },
-  pills: { flexDirection: 'row', gap: 6, marginVertical: 14 },
+
+  // Filter pills
+  pills: { flexDirection: 'row', gap: 6, marginBottom: 14 },
   pill: { paddingHorizontal: 11, paddingVertical: 5, borderRadius: 6, backgroundColor: COLORS.card, borderWidth: 0.5, borderColor: COLORS.line },
   pillActive: { backgroundColor: COLORS.ink, borderColor: COLORS.ink },
   pillText: { fontSize: 14, fontWeight: '600', color: COLORS.ink2 },
   pillTextActive: { fontSize: 14, fontWeight: '600', color: '#fff' },
+
+  // Course cards
   courseList: { gap: 10 },
   courseCard: { backgroundColor: COLORS.card, borderRadius: 18, padding: 14, borderWidth: 0.5, borderColor: COLORS.line, position: 'relative', overflow: 'hidden' },
   colorStrip: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 4 },
@@ -272,7 +347,22 @@ const styles = StyleSheet.create({
   progressBg: { flex: 1, height: 4, backgroundColor: COLORS.line, borderRadius: 2, overflow: 'hidden' },
   progressFill: { height: 4, borderRadius: 2 },
   progressText: { fontSize: 14, color: COLORS.ink3, fontWeight: '500' },
+
+  // Empty states
   emptyCard: { backgroundColor: COLORS.card, borderRadius: 18, padding: 32, alignItems: 'center', gap: 6, borderWidth: 0.5, borderColor: COLORS.line },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: COLORS.ink },
   emptyText: { fontSize: 14, color: COLORS.ink3 },
+
+  // Semester dropdown modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', paddingHorizontal: 28 },
+  modalContent: { backgroundColor: COLORS.card, borderRadius: 22, paddingTop: 20, paddingBottom: 8, maxHeight: 400 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
+  modalTitle: { fontSize: 17, fontWeight: '600', color: COLORS.ink },
+  modalList: { paddingHorizontal: 20 },
+  modalRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
+  modalRowBorder: { borderBottomWidth: 0.5, borderBottomColor: COLORS.line },
+  modalRowName: { fontSize: 15, fontWeight: '500', color: COLORS.ink },
+  modalRowDate: { fontSize: 13, color: COLORS.ink3, marginTop: 2 },
+  modalAddBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 14, marginHorizontal: 20, marginTop: 4, borderTopWidth: 0.5, borderTopColor: COLORS.line },
+  modalAddText: { fontSize: 14, fontWeight: '600', color: COLORS.brand },
 });
